@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airdrop Agent</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8">Airdrop Agent</h1>
+        
+        <!-- Airdrop List -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Available Airdrops</h2>
+            <div id="airdropList" class="space-y-4">
+                <!-- Airdrops will be populated here -->
+            </div>
+        </div>
+
+        <!-- Wallet Connection -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Wallet Connection</h2>
+            <button id="connectWallet" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                Connect Wallet
+            </button>
+            <p id="walletAddress" class="mt-2 text-gray-600"></p>
+        </div>
+    </div>
+
+    <script>
+        // Fetch airdrops from our backend
+        async function fetchAirdrops() {
+            try {
+                const response = await fetch('http://localhost:5000/api/airdrops');
+                const airdrops = await response.json();
+                displayAirdrops(airdrops);
+            } catch (error) {
+                console.error('Error fetching airdrops:', error);
+            }
+        }
+
+        // Display airdrops in the UI
+        function displayAirdrops(airdrops) {
+            const container = document.getElementById('airdropList');
+            container.innerHTML = '';
+
+            airdrops.forEach(airdrop => {
+                const element = document.createElement('div');
+                element.className = 'border rounded p-4';
+                element.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-semibold">${airdrop.name}</h3>
+                            <p class="text-sm text-gray-600">Deadline: ${airdrop.claim_deadline}</p>
+                        </div>
+                        <button 
+                            class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                            onclick="claimAirdrop(${airdrop.id})"
+                        >
+                            Claim
+                        </button>
+                    </div>
+                `;
+                container.appendChild(element);
+            });
+        }
+
+        // Handle wallet connection
+        async function connectWallet() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const accounts = await window.ethereum.request({ 
+                        method: 'eth_requestAccounts' 
+                    });
+                    document.getElementById('walletAddress').textContent = 
+                        `Connected: ${accounts[0]}`;
+                } catch (error) {
+                    console.error('Error connecting wallet:', error);
+                }
+            } else {
+                alert('Please install MetaMask!');
+            }
+        }
+
+        // Handle airdrop claiming
+        async function claimAirdrop(airdropId) {
+            try {
+                const response = await fetch(
+                    `http://localhost:5000/api/airdrops/${airdropId}`, 
+                    {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ status: 'Claiming' })
+                    }
+                );
+                
+                if (response.ok) {
+                    // Refresh the airdrop list
+                    fetchAirdrops();
+                }
+            } catch (error) {
+                console.error('Error claiming airdrop:', error);
+            }
+        }
+
+        // Initialize
+        document.getElementById('connectWallet')
+            .addEventListener('click', connectWallet);
+        fetchAirdrops();
+    </script>
+</body>
+</html>
