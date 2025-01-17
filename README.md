@@ -10,3 +10,8 @@
 
 # Tests
 `pytest test_app.py -v`
+`pytest test_scrapper.py`
+- Run `python app.py`and check
+`http://127.0.0.1:5000/dashboard`
+
+

@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request
+from flask import render_template
 from flask_cors import CORS
 from datetime import datetime
 
@@ -11,6 +12,11 @@ airdrops = [
     {'id': 1, 'name': 'Airdrop 1', 'claim_deadline': '2025-01-30', 'status': 'Unclaimed'},
     {'id': 2, 'name': 'Airdrop 2', 'claim_deadline': '2025-02-15', 'status': 'Unclaimed'},
 ]
+
+# Add new route for dashboard
+@app.route('/dashboard')
+def dashboard():
+    return render_template('index.html')
 
 # Route: Home
 @app.route('/')
